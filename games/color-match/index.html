@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>いろ あわせ</title>
+
+<style>
+body{
+    margin:0;
+    font-family:sans-serif;
+    background:#f5f5f5;
+    text-align:center;
+}
+
+#target{
+    width:220px;
+    height:220px;
+    margin:20px auto;
+    border-radius:30px;
+    border:8px solid white;
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+}
+
+#choices{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+    max-width:500px;
+    margin:20px auto;
+    padding:10px;
+}
+
+.colorBtn{
+    height:160px;
+    border:none;
+    border-radius:25px;
+    box-shadow:0 4px 8px rgba(0,0,0,0.2);
+    cursor:pointer;
+}
+
+#message{
+    height:80px;
+    font-size:48px;
+    line-height:80px;
+}
+
+.correct{
+    animation:pop 0.5s;
+}
+
+@keyframes pop{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.2);}
+    100%{transform:scale(1);}
+}
+</style>
+</head>
+
+<body>
+
+<div id="target"></div>
+
+<div id="message"></div>
+
+<div id="choices">
+    <button class="colorBtn"></button>
+    <button class="colorBtn"></button>
+    <button class="colorBtn"></button>
+    <button class="colorBtn"></button>
+</div>
+
+<script>
+const colors = [
+    "#ff4d4d", //赤
+    "#4d8cff", //青
+    "#4dff4d", //緑
+    "#ffd11a", //黄
+    "#ff66cc", //ピンク
+    "#ff9933"  //オレンジ
+];
+
+const target = document.getElementById("target");
+const buttons = document.querySelectorAll(".colorBtn");
+const message = document.getElementById("message");
+
+function beep(freq){
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.frequency.value = freq;
+    osc.start();
+
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + 0.3
+    );
+
+    osc.stop(ctx.currentTime + 0.3);
+}
+
+function newGame(){
+
+    message.textContent = "";
+
+    const answer =
+        colors[Math.floor(Math.random()*colors.length)];
+
+    target.style.backgroundColor = answer;
+
+    let choices = [answer];
+
+    while(choices.length < 4){
+        let c =
+        colors[Math.floor(Math.random()*colors.length)];
+        if(!choices.includes(c)){
+            choices.push(c);
+        }
+    }
+
+    choices.sort(()=>Math.random()-0.5);
+
+    buttons.forEach((btn)=>{
+        const c = choices.pop();
+        btn.style.backgroundColor = c;
+
+        btn.onclick = ()=>{
+            if(c === answer){
+                message.textContent = "😊";
+                target.classList.add("correct");
+                beep(800);
+
+                setTimeout(()=>{
+                    target.classList.remove("correct");
+                    newGame();
+                },1000);
+
+            }else{
+                message.textContent = "😞";
+                beep(250);
+            }
+        };
+    });
+}
+
+newGame();
+</script>
+
+</body>
+</html>
