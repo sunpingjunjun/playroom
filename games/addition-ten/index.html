@@ -39,4 +39,5 @@ function show(){if(q>=10){finish();return;}animal.style.display='block';setPet()
 function check(v,ans){document.querySelectorAll('.choice').forEach(b=>b.disabled=true);const m=document.getElementById('msg');if(v===ans){medals++;drawMedals();m.textContent='せいかい！';confettiFx();setTimeout(()=>{confetti.innerHTML='';q++;show();},3000);}else{m.className='bad';m.textContent='ざんねん！ こたえは '+ans+' だよ';setTimeout(()=>{q++;show();},2500);}}
 const medalsDiv=document.getElementById('medals');drawMedals();show();
 </script>
+<script src="../../portal-nav.js"></script>
 </body></html>
