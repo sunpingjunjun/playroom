@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>じょしクイズ</title>
+
+<style>
+body{
+    background:#123f90;
+    color:white;
+    font-family:sans-serif;
+    text-align:center;
+    margin:0;
+    padding:20px;
+}
+
+h1{
+    font-size:48px;
+}
+
+#quiz{
+    background:white;
+    color:black;
+    max-width:900px;
+    margin:auto;
+    padding:30px;
+    border-radius:20px;
+}
+
+#count{
+    font-size:24px;
+    margin-bottom:20px;
+}
+
+#question{
+    font-size:42px;
+    margin:30px 0;
+}
+
+.choice{
+    font-size:36px;
+    padding:15px 30px;
+    margin:10px;
+    border:none;
+    border-radius:15px;
+    background:#4CAF50;
+    color:white;
+    cursor:pointer;
+}
+
+.choice:hover{
+    background:#45a049;
+}
+
+#result{
+    font-size:36px;
+    font-weight:bold;
+    margin-top:20px;
+}
+</style>
+</head>
+<body>
+
+<h1>✨じょしクイズ✨</h1>
+
+<div id="quiz">
+    <div id="count"></div>
+    <div id="question"></div>
+    <div id="choices"></div>
+    <div id="result"></div>
+</div>
+
+<script>
+
+const allQuestions = [
+
+{q:"ばなな（　）たべる",c:["を","に","へ"],a:"を"},
+{q:"うんどうじょう（　）あそぶ",c:["へ","が","で"],a:"で"},
+{q:"がっこう（　）いく",c:["に","を","が"],a:"に"},
+{q:"ともだち（　）あう",c:["と","を","へ"],a:"と"},
+{q:"ほん（　）よむ",c:["で","を","が"],a:"を"},
+{q:"ねこ（　）なく",c:["を","が","に"],a:"が"},
+{q:"こうえん（　）いく",c:["に","を","で"],a:"に"},
+{q:"えんぴつ（　）かく",c:["で","に","を"],a:"で"},
+{q:"みず（　）のむ",c:["を","が","へ"],a:"を"},
+{q:"いえ（　）かえる",c:["に","で","を"],a:"に"},
+{q:"おとうと（　）あそぶ",c:["を","と","の"],a:"と"},
+{q:"りんご（　）たべる",c:["を","で","に"],a:"を"},
+{q:"きょうしつ（　）べんきょうする",c:["を","で","へ"],a:"で"},
+{q:"としょかん（　）いく",c:["に","が","を"],a:"に"},
+{q:"せんせい（　）はなす",c:["と","で","を"],a:"と"},
+{q:"てがみ（　）かく",c:["を","が","に"],a:"を"},
+{q:"いぬ（　）はしる",c:["を","に","が"],a:"が"},
+{q:"スーパー（　）いく",c:["を","に","で"],a:"に"},
+{q:"はさみ（　）かみをきる",c:["に","で","を"],a:"で"},
+{q:"ぎゅうにゅう（　）のむ",c:["が","へ","を"],a:"を"},
+{q:"うち（　）かえる",c:["で","に","が"],a:"に"},
+{q:"おねえさん（　）あそぶ",c:["と","を","に"],a:"と"},
+{q:"ごはん（　）たべる",c:["に","を","で"],a:"を"},
+{q:"プール（　）およぐ",c:["で","へ","を"],a:"で"},
+{q:"びょういん（　）いく",c:["が","を","へ"],a:"へ"},
+{q:"おかあさん（　）かいものをする",c:["を","と","で"],a:"と"},
+{q:"しんぶん（　）よむ",c:["が","に","を"],a:"を"},
+{q:"とり（　）とぶ",c:["が","を","で"],a:"が"},
+{q:"えき（　）いく",c:["を","に","が"],a:"に"},
+{q:"クレヨン（　）えをかく",c:["で","を","へ"],a:"で"},
+{q:"おちゃ（　）のむ",c:["へ","が","を"],a:"を"},
+{q:"がっこう（　）かえる",c:["を","から","で"],a:"から"},
+{q:"おとうさん（　）はなす",c:["で","と","を"],a:"と"},
+{q:"サッカー（　）する",c:["を","に","が"],a:"を"},
+{q:"こうてい（　）はしる",c:["へ","で","に"],a:"で"},
+{q:"デパート（　）いく",c:["が","に","を"],a:"に"},
+{q:"バス（　）がっこうへいく",c:["で","を","に"],a:"で"},
+{q:"ジュース（　）のむ",c:["が","を","へ"],a:"を"},
+{q:"あかちゃん（　）わらう",c:["に","を","が"],a:"が"},
+{q:"おばあさん（　）あう",c:["に","を","で"],a:"に"},
+{q:"ベッド（　）ねる",c:["を","で","が"],a:"で"},
+{q:"そら（　）ひこうきが とぶ",c:["で","の","を"],a:"を"},
+{q:"ほんだな（　）ほんがある",c:["に","を","で"],a:"に"},
+{q:"バス（　）がっこうへいく",c:["で","を","に"],a:"で"},
+{q:"せんせい（　）はなす",c:["と","を","へ"],a:"と"},
+{q:"りんご（　）あかい",c:["が","を","で"],a:"が"},
+{q:"つくえ（　）べんきょうする",c:["で","に","を"],a:"で"},
+{q:"ともだち（　）てがみをもらう",c:["と","から","を"],a:"から"},
+{q:"がっこう（　）かえる",c:["へ","が","を"],a:"へ"},
+{q:"おかあさん（　）ケーキをつくる",c:["が","で","に"],a:"が"}
+
+];
+
+function shuffle(array){
+
+for(let i=array.length-1;i>0;i--){
+
+let j=Math.floor(Math.random()*(i+1));
+
+[array[i],array[j]]=[array[j],array[i]];
+}
+
+return array;
+}
+
+let quizzes = shuffle([...allQuestions]).slice(0,10);
+
+quizzes.forEach(q=>{
+    q.c = shuffle([...q.c]);
+});
+
+let current = 0;
+
+function showQuestion(){
+
+document.getElementById("count").innerHTML =
+(current+1)+" / "+quizzes.length+" もん";
+
+document.getElementById("question").innerHTML =
+quizzes[current].q;
+
+document.getElementById("result").innerHTML = "";
+
+let area =
+document.getElementById("choices");
+
+area.innerHTML = "";
+
+quizzes[current].c.forEach(choice=>{
+
+let btn =
+document.createElement("button");
+
+btn.className="choice";
+btn.innerHTML=choice;
+
+btn.onclick=function(){
+checkAnswer(choice);
+};
+
+area.appendChild(btn);
+
+});
+}
+
+function checkAnswer(choice){
+
+if(choice===quizzes[current].a){
+
+document.getElementById("result").innerHTML=
+"⭕ せいかい！";
+
+document.getElementById("result").style.color=
+"green";
+
+setTimeout(function(){
+
+current++;
+
+if(current<quizzes.length){
+
+showQuestion();
+
+}else{
+
+document.getElementById("quiz").innerHTML=
+"<h2>🏆ぜんもんクリア！🏆</h2>"+
+"<p style='font-size:32px'>よく がんばりました！</p>"+
+"<button class='choice' onclick='location.reload()'>もういちど</button>";
+
+}
+
+},1000);
+
+}else{
+
+document.getElementById("result").innerHTML=
+"❌ ざんねん";
+
+document.getElementById("result").style.color=
+"red";
+}
+}
+
+showQuestion();
+
+</script>
+
+</body>
+</html>
