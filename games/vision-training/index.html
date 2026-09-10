@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ビジョントレーニング</title>
+
+<style>
+body{
+    font-family:"UD デジタル 教科書体 N-R",sans-serif;
+    text-align:center;
+    background:#f0f8ff;
+    margin:0;
+    padding:20px;
+}
+
+h1{
+    font-size:40px;
+    color:#333;
+}
+
+#startScreen p{
+    font-size:28px;
+    color:#333;
+}
+
+#difficultyArea{
+    margin:20px 0;
+    font-size:25px;
+}
+
+#difficulty{
+    margin-left:8px;
+    padding:10px 14px;
+    border:2px solid #555;
+    border-radius:8px;
+    background:white;
+    font-size:24px;
+}
+
+#score{
+    font-size:32px;
+    margin:10px;
+    font-weight:bold;
+}
+
+#timer{
+    font-size:32px;
+    color:#d00;
+    margin-bottom:20px;
+}
+
+#countdown{
+    font-size:120px;
+    font-weight:bold;
+    color:#ff6600;
+    margin:30px;
+}
+
+#grid{
+    width:min(420px,92vw);
+    margin:auto;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+}
+
+.cell{
+    width:100%;
+    aspect-ratio:1;
+    box-sizing:border-box;
+    background:white;
+    border:4px solid #555;
+    border-radius:15px;
+    cursor:pointer;
+    transition:0.2s;
+    touch-action:manipulation;
+}
+
+.active{
+    background:gold;
+    box-shadow:0 0 30px gold;
+}
+
+.cell.hit{
+    background:#4caf50;
+    box-shadow:0 0 38px #4caf50;
+    transform:scale(.92);
+}
+
+.cell.miss{
+    background:#ff6b6b;
+    box-shadow:0 0 25px #ff6b6b;
+    transform:scale(.92);
+}
+
+#endText{
+    font-size:80px;
+    font-weight:bold;
+    color:#ff3300;
+    margin:20px;
+}
+
+button{
+    font-size:32px;
+    padding:15px 40px;
+    border:none;
+    border-radius:10px;
+    background:#4caf50;
+    color:white;
+    cursor:pointer;
+}
+
+button:hover{ background:#45a049; }
+.hidden{ display:none; }
+</style>
+</head>
+
+<body>
+
+<h1>ビジョントレーニング</h1>
+
+<div id="startScreen">
+    <p>準備ができたらボタンを押してください</p>
+    <div id="difficultyArea">
+        <label for="difficulty">光る時間：</label>
+        <select id="difficulty">
+            <option value="1000">1.0秒（やさしい）</option>
+            <option value="800">0.8秒</option>
+            <option value="500" selected>0.5秒（ふつう）</option>
+            <option value="300">0.3秒（むずかしい）</option>
+        </select>
+    </div>
+    <button id="startButton" type="button">スタート</button>
+</div>
+
+<div id="countdown" class="hidden"></div>
+
+<div id="game" class="hidden">
+    <div id="score">とくてん：0</div>
+    <div id="timer">のこり：30</div>
+
+    <div id="grid">
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+        <div class="cell"></div>
+    </div>
+</div>
+
+<div id="endScreen" class="hidden">
+    <div id="endText">おわり</div>
+    <div id="finalScore" style="font-size:40px;margin-bottom:20px;"></div>
+    <button id="restartButton" type="button">もういちど</button>
+</div>
+
+<script>
+const cells = document.querySelectorAll(".cell");
+const startScreen = document.getElementById("startScreen");
+const startButton = document.getElementById("startButton");
+const restartButton = document.getElementById("restartButton");
+const difficultyEl = document.getElementById("difficulty");
+const countdownEl = document.getElementById("countdown");
+const gameEl = document.getElementById("game");
+const endScreen = document.getElementById("endScreen");
+const scoreEl = document.getElementById("score");
+const timerEl = document.getElementById("timer");
+const finalScoreEl = document.getElementById("finalScore");
+
+let score = 0;
+let timeLeft = 30;
+let activeCell = null;
+let activeCellScored = false;
+let gameRunning = false;
+let lightDuration = 500;
+let countdownTimer = null;
+let gameTimer = null;
+let lightTimer = null;
+let audioContext = null;
+
+function clearTimers(){
+    clearInterval(countdownTimer);
+    clearInterval(gameTimer);
+    clearInterval(lightTimer);
+    countdownTimer = null;
+    gameTimer = null;
+    lightTimer = null;
+}
+
+function clearLight(){
+    cells.forEach(cell=>cell.classList.remove("active","hit","miss"));
+    activeCell = null;
+    activeCellScored = false;
+}
+
+function playSound(frequency,duration,type="sine"){
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if(!AudioContextClass) return;
+
+    if(!audioContext) audioContext = new AudioContextClass();
+    if(audioContext.state === "suspended") audioContext.resume();
+
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const now = audioContext.currentTime;
+
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency,now);
+    gain.gain.setValueAtTime(0.16,now);
+    gain.gain.exponentialRampToValueAtTime(0.001,now + duration);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + duration);
+}
+
+function showTapReaction(cell,type){
+    cell.classList.remove("hit","miss");
+    void cell.offsetWidth;
+    cell.classList.add(type);
+    setTimeout(()=>cell.classList.remove(type),220);
+}
+
+function showOnly(screen){
+    [startScreen,countdownEl,gameEl,endScreen].forEach(element=>{
+        element.classList.toggle("hidden",element !== screen);
+    });
+}
+
+function startCountdown(){
+    clearTimers();
+    clearLight();
+    gameRunning = false;
+    lightDuration = Number(difficultyEl.value);
+    showOnly(countdownEl);
+
+    let count = 3;
+    countdownEl.textContent = count;
+
+    countdownTimer = setInterval(()=>{
+        count--;
+
+        if(count > 0){
+            countdownEl.textContent = count;
+        }else if(count === 0){
+            countdownEl.textContent = "スタート！";
+        }else{
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            startGame();
+        }
+    },1000);
+}
+
+function startGame(){
+    score = 0;
+    timeLeft = 30;
+    gameRunning = true;
+    updateScore();
+    timerEl.textContent = "のこり：" + timeLeft;
+    showOnly(gameEl);
+    moveLight();
+
+    lightTimer = setInterval(moveLight,lightDuration);
+    gameTimer = setInterval(()=>{
+        timeLeft--;
+        timerEl.textContent = "のこり：" + timeLeft;
+
+        if(timeLeft <= 0) endGame();
+    },1000);
+}
+
+function moveLight(){
+    const previousCell = activeCell;
+    clearLight();
+    let randomIndex;
+    do{
+        randomIndex = Math.floor(Math.random()*cells.length);
+    }while(cells.length > 1 && cells[randomIndex] === previousCell);
+    activeCell = cells[randomIndex];
+    activeCell.classList.add("active");
+    activeCellScored = false;
+}
+
+cells.forEach(cell=>{
+    cell.addEventListener("pointerdown",()=>{
+        if(!gameRunning) return;
+
+        if(cell !== activeCell){
+            showTapReaction(cell,"miss");
+            playSound(180,.12,"square");
+            return;
+        }
+
+        if(activeCellScored) return;
+        activeCellScored = true;
+        score++;
+        updateScore();
+        showTapReaction(cell,"hit");
+        playSound(760,.16);
+    });
+});
+
+function updateScore(){
+    scoreEl.textContent = "とくてん：" + score;
+}
+
+function endGame(){
+    clearTimers();
+    clearLight();
+    gameRunning = false;
+    finalScoreEl.textContent = "とくてん：" + score + "てん";
+    showOnly(endScreen);
+}
+
+function returnToStart(){
+    clearTimers();
+    clearLight();
+    gameRunning = false;
+    showOnly(startScreen);
+}
+
+startButton.addEventListener("click",startCountdown);
+restartButton.addEventListener("click",returnToStart);
+</script>
+
+</body>
+</html>
