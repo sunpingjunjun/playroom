@@ -13,6 +13,7 @@ body{
     text-align:center;
     margin:0;
     padding:20px;
+    overflow-x:hidden;
 }
 
 h1{
@@ -58,9 +59,37 @@ h1{
     font-weight:bold;
     margin-top:20px;
 }
+
+#confetti{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:100;
+}
+
+.confetti-piece{
+    position:absolute;
+    top:-24px;
+    width:12px;
+    height:20px;
+    border-radius:3px;
+    animation:confetti-fall var(--duration) cubic-bezier(.18,.73,.35,1) forwards;
+}
+
+@keyframes confetti-fall{
+    0%{transform:translate3d(0,-20px,0) rotate(0deg);opacity:1}
+    100%{transform:translate3d(var(--drift),105vh,0) rotate(var(--spin));opacity:.9}
+}
+
+@media (prefers-reduced-motion:reduce){
+    .confetti-piece{animation-duration:.35s}
+}
 </style>
 </head>
 <body>
+
+<div id="confetti" aria-hidden="true"></div>
 
 <h1>✨じょしクイズ✨</h1>
 
@@ -147,6 +176,49 @@ quizzes.forEach(q=>{
 });
 
 let current = 0;
+let audioContext;
+
+function playCorrectSound(){
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if(!AudioContextClass) return;
+
+    audioContext = audioContext || new AudioContextClass();
+    const now = audioContext.currentTime;
+    const notes = [523.25,659.25,783.99,1046.5];
+
+    notes.forEach((frequency,index)=>{
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        const start = now + index*0.075;
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(frequency,start);
+        gain.gain.setValueAtTime(0.0001,start);
+        gain.gain.exponentialRampToValueAtTime(0.18,start+0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001,start+0.24);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(start);
+        oscillator.stop(start+0.25);
+    });
+}
+
+function launchConfetti(){
+    const container = document.getElementById("confetti");
+    const colors = ["#ff3b6b","#ffd43b","#42d392","#4dabf7","#b197fc","#ff922b"];
+
+    for(let i=0;i<70;i++){
+        const piece = document.createElement("span");
+        piece.className = "confetti-piece";
+        piece.style.left = Math.random()*100+"vw";
+        piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+        piece.style.setProperty("--duration",(1.4+Math.random()*1.4)+"s");
+        piece.style.setProperty("--drift",(-100+Math.random()*200)+"px");
+        piece.style.setProperty("--spin",(360+Math.random()*720)+"deg");
+        piece.style.animationDelay = Math.random()*0.25+"s";
+        container.appendChild(piece);
+        piece.addEventListener("animationend",()=>piece.remove());
+    }
+}
 
 function showQuestion(){
 
@@ -183,6 +255,10 @@ area.appendChild(btn);
 function checkAnswer(choice){
 
 if(choice===quizzes[current].a){
+
+document.querySelectorAll(".choice").forEach(btn=>btn.disabled=true);
+playCorrectSound();
+launchConfetti();
 
 document.getElementById("result").innerHTML=
 "⭕ せいかい！";
