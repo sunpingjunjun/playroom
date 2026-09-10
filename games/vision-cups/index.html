@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#101525" />
+    <title>VISION CUPS</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">VISION TRAINING</p>
+          <h1>VISION CUPS</h1>
+        </div>
+        <button id="soundButton" class="icon-button" type="button" aria-label="効果音をオフにする">♪</button>
+      </header>
+
+      <section class="scoreboard" aria-label="スコア">
+        <div><span>SCORE</span><strong id="score">0</strong></div>
+        <div><span>STREAK</span><strong id="streak">0</strong></div>
+        <div><span>BEST</span><strong id="best">0</strong></div>
+      </section>
+
+      <section class="game-card">
+        <div class="status-row">
+          <span id="roundLabel">READY</span>
+          <span id="difficultyLabel">NORMAL</span>
+        </div>
+        <p id="instruction" class="instruction" aria-live="polite">難易度を選んでスタート</p>
+
+        <div id="arena" class="arena" aria-label="カップを追いかけるゲーム">
+          <div id="ball" class="ball" aria-hidden="true"></div>
+          <button class="cup-slot" data-slot="0" type="button" aria-label="左のカップ">
+            <span class="cup"><span class="cup-shine"></span></span>
+            <span class="slot-number">1</span>
+          </button>
+          <button class="cup-slot" data-slot="1" type="button" aria-label="中央のカップ">
+            <span class="cup"><span class="cup-shine"></span></span>
+            <span class="slot-number">2</span>
+          </button>
+          <button class="cup-slot" data-slot="2" type="button" aria-label="右のカップ">
+            <span class="cup"><span class="cup-shine"></span></span>
+            <span class="slot-number">3</span>
+          </button>
+          <div class="table-line" aria-hidden="true"></div>
+        </div>
+
+        <div class="result" id="result" aria-live="assertive"></div>
+      </section>
+
+      <section class="controls">
+        <div class="difficulty" role="group" aria-label="難易度">
+          <button type="button" data-level="easy">EASY</button>
+          <button type="button" data-level="normal" class="active">NORMAL</button>
+          <button type="button" data-level="hard">HARD</button>
+        </div>
+        <button id="startButton" class="start-button" type="button">START</button>
+        <p class="hint">球の入ったカップを目で追い、止まったらタップ</p>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
