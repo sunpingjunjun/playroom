@@ -47,4 +47,5 @@
   let lastTouch=0;$('.stage').addEventListener('touchend',e=>{let now=Date.now();if(now-lastTouch<320)e.preventDefault();lastTouch=now},{passive:false});addEventListener('keydown',e=>{let lane=keys[e.key.toLowerCase()];if(lane!==undefined&&!e.repeat){e.preventDefault();hit(lane)}});document.querySelectorAll('.target').forEach((b,i)=>b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();tapLane(i)}));lanes.forEach((lane,i)=>lane.addEventListener('pointerdown',()=>tapLane(i)));menu();
 })();
 </script>
+<script src="../../portal-nav.js"></script>
 </body></html>
