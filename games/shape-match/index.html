@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>図形マッチングゲーム</title>
+
+<style>
+body{
+    font-family: "UD デジタル 教科書体 N-R","Yu Gothic",sans-serif;
+    text-align:center;
+    background:#f0f8ff;
+    margin:0;
+    padding:20px;
+}
+
+h1{
+    color:#004080;
+}
+
+#score{
+    font-size:30px;
+    font-weight:bold;
+    margin:20px;
+}
+
+#gameArea{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+#questionArea{
+    margin-top:20px;
+    margin-bottom:120px; /* 問題と選択肢を大きく離す */
+}
+
+#questionShape{
+    width:180px;
+    height:180px;
+}
+
+#choices{
+    display:flex;
+    justify-content:center;
+    gap:60px;
+    flex-wrap:wrap;
+}
+
+.choice{
+    width:140px;
+    height:140px;
+    cursor:pointer;
+    transition:transform .2s;
+}
+
+.choice:hover{
+    transform:scale(1.1);
+}
+
+.message{
+    font-size:32px;
+    margin:20px;
+    font-weight:bold;
+}
+
+.shake{
+    animation:shake 0.6s infinite;
+}
+
+@keyframes shake{
+    0%{transform:translateX(0);}
+    25%{transform:translateX(-10px);}
+    50%{transform:translateX(10px);}
+    75%{transform:translateX(-10px);}
+    100%{transform:translateX(0);}
+}
+
+button{
+    font-size:24px;
+    padding:10px 30px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>図形マッチングゲーム</h1>
+<div id="score">せいかい 0 / 10</div>
+
+<div class="message" id="message">おなじ かたち を さがそう！</div>
+
+<div id="gameArea">
+    <div id="questionArea">
+        <div id="questionShape"></div>
+    </div>
+
+    <div id="choices"></div>
+</div>
+
+<script>
+
+const shapes = ["circle","triangle","square","star"];
+const colors = ["#ff4d4d","#4da6ff","#4dff88","#ffd24d"];
+
+let answerShape = "";
+let answerColor = "";
+let score = 0;
+let mistakes = 0;
+
+function createShape(shape,color,size=120){
+
+    if(shape==="circle"){
+        return `
+        <svg width="${size}" height="${size}">
+            <circle cx="${size/2}" cy="${size/2}" r="${size/2-8}"
+             fill="${color}" stroke="black" stroke-width="3"/>
+        </svg>`;
+    }
+
+    if(shape==="triangle"){
+        return `
+        <svg width="${size}" height="${size}">
+            <polygon points="${size/2},8 ${size-8},${size-8} 8,${size-8}"
+             fill="${color}" stroke="black" stroke-width="3"/>
+        </svg>`;
+    }
+
+    if(shape==="square"){
+        return `
+        <svg width="${size}" height="${size}">
+            <rect x="8" y="8" width="${size-16}" height="${size-16}"
+             fill="${color}" stroke="black" stroke-width="3"/>
+        </svg>`;
+    }
+
+    if(shape==="star"){
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 100 100">
+            <polygon
+            points="50,5 61,38 95,38 67,58 78,92 50,72 22,92 33,58 5,38 39,38"
+            fill="${color}" stroke="black" stroke-width="3"/>
+        </svg>`;
+    }
+}
+
+function shuffle(array){
+    return array.sort(()=>Math.random()-0.5);
+}
+
+function newQuestion(){
+
+    if(score >= 10){
+        document.body.innerHTML = `
+        <h1 style="font-size:60px;color:green;">
+        🎉 クリア！
+        </h1>
+        <h2>10もん せいかい！</h2>
+        <button onclick="location.reload()">もう いちど</button>
+        `;
+        return;
+    }
+
+    mistakes = 0;
+
+    const index = Math.floor(Math.random()*4);
+
+    answerShape = shapes[index];
+    answerColor = colors[index];
+
+    const question = document.getElementById("questionShape");
+    question.classList.remove("shake");
+
+    question.innerHTML =
+        createShape(answerShape,answerColor,180);
+
+    const choicesDiv = document.getElementById("choices");
+    choicesDiv.innerHTML = "";
+
+    const choiceList = shuffle([...shapes]);
+
+    choiceList.forEach(shape=>{
+
+        const div = document.createElement("div");
+        div.className = "choice";
+
+        const color =
+        colors[shapes.indexOf(shape)];
+
+        div.innerHTML =
+        createShape(shape,color,130);
+
+        div.onclick = ()=>checkAnswer(shape);
+
+        choicesDiv.appendChild(div);
+    });
+
+}
+
+function checkAnswer(selected){
+
+    const msg = document.getElementById("message");
+
+    if(selected === answerShape){
+
+        score++;
+
+        document.getElementById("score").innerText =
+        `せいかい ${score} / 10`;
+
+        msg.innerHTML = "⭕ せいかい！";
+        msg.style.color = "green";
+
+        setTimeout(newQuestion,1000);
+
+    }else{
+
+        mistakes++;
+
+        msg.innerHTML = "❌ もう いちど";
+        msg.style.color = "red";
+
+        if(mistakes >= 3){
+            document
+            .getElementById("questionShape")
+            .classList.add("shake");
+        }
+    }
+}
+
+newQuestion();
+
+</script>
+
+</body>
+</html>
