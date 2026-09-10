@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>たしざんゲーム 完全版</title>
+<style>
+body{margin:0;background:#e0f2fe;font-family:sans-serif;text-align:center;overflow:hidden}
+#medalsTop{position:fixed;top:10px;left:10px;font-size:34px;z-index:10}
+#wrap{max-width:1200px;margin:45px auto;background:#fff;border-radius:24px;padding:18px}
+h1{font-size:40px;margin:8px}
+#objects{display:flex;justify-content:center;align-items:center;flex-wrap:nowrap;font-size:min(80px,7vw);min-height:120px}
+.emoji{position:relative;cursor:pointer}.num{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;color:red;border-radius:50%;padding:1px 5px;font-size:18px;font-weight:bold}
+#question{font-size:46px;font-weight:bold}#msg{font-size:28px;min-height:40px;color:#c62828;font-weight:bold}
+#answers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:620px;margin:auto}.btn{font-size:36px;padding:14px;border:4px solid #666;border-radius:18px;background:#fff}.correct{border-color:red!important;background:#ffe4e4}
+#result{font-size:28px;font-weight:bold}#trophy{display:none;font-size:120px}#finalMedals{font-size:42px;line-height:1.4;word-break:break-word}#restart{display:none;font-size:32px;padding:14px 28px;background:#ffd54f;border:4px solid #cc9900;border-radius:18px;font-weight:bold}
+canvas{position:fixed;inset:0;pointer-events:none}
+</style></head><body>
+<div id="medalsTop"></div><canvas id="cv"></canvas><div id="wrap"><h1>たしざんゲーム</h1><div>えを たっちして かぞえよう</div><div id="objects"></div><div id="question"></div><div id="msg"></div><div id="answers"></div><div id="result"></div><div id="trophy">🏆</div><div id="finalMedals"></div><br><button id="restart">もういちど</button></div>
+<script>
+const icons=['🍎','🍓','🍊','⭐','🐟'];let q=0,m=0,ans=0;const $=i=>document.getElementById(i);
+function medals(){$('medalsTop').textContent='🏅'.repeat(m)}
+function start(){q=0;m=0;medals();$('result').innerHTML='';$('trophy').style.display='none';$('finalMedals').innerHTML='';$('restart').style.display='none';nextQ();}
+function nextQ(){if(q>=10)return finish();$('msg').textContent='';let a,b;do{a=Math.floor(Math.random()*5)+1;b=Math.floor(Math.random()*5)+1}while(a+b>10);ans=a+b;let icon=icons[Math.floor(Math.random()*icons.length)],n=1,h='';for(let i=0;i<a;i++,n++)h+=`<span class="emoji" onclick="this.querySelector('.num').style.display='block'">${icon}<span class="num">${n}</span></span>`;h+=' ＋ ';for(let i=0;i<b;i++,n++)h+=`<span class="emoji" onclick="this.querySelector('.num').style.display='block'">${icon}<span class="num">${n}</span></span>`;$('objects').innerHTML=h;$('question').textContent=`${a} ＋ ${b} = ?`;let c=[ans];while(c.length<3){let r=Math.floor(Math.random()*10)+1;if(!c.includes(r))c.push(r)}c.sort(()=>Math.random()-0.5);$('answers').innerHTML='';c.forEach(v=>{let bt=document.createElement('button');bt.className='btn';bt.textContent=v;bt.dataset.v=v;bt.onclick=()=>check(v);$('answers').appendChild(bt);});}
+function check(v){let bs=document.querySelectorAll('.btn');bs.forEach(b=>b.disabled=true);if(v===ans){m++;medals();$('msg').textContent='せいかい！';confetti(100);q++;setTimeout(nextQ,900);}else{bs.forEach(b=>{if(Number(b.dataset.v)===ans)b.classList.add('correct')});$('msg').textContent='こたえは '+ans;q++;setTimeout(nextQ,1800);}}
+function finish(){$('objects').innerHTML='';$('question').textContent='';$('answers').innerHTML='';$('finalMedals').innerHTML='🏅'.repeat(m);if(m===10){$('trophy').style.display='block';$('result').innerHTML='ぜんもんせいかい！ おめでとう！<br>めだるを 10こ とれたよ！';for(let i=0;i<10;i++)confetti(200);}else{$('result').innerHTML='めだるを '+m+'こ とれたよ！<br>よくがんばったね';}$('restart').style.display='inline-block';}
+$('restart').onclick=start;
+const cv=$('cv'),ctx=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;let p=[];function confetti(n){for(let i=0;i<n;i++)p.push({x:innerWidth/2,y:120,vx:(Math.random()-.5)*10,vy:-Math.random()*10,s:4+Math.random()*6,c:`hsl(${Math.random()*360},90%,60%)`})}function an(){ctx.clearRect(0,0,cv.width,cv.height);p.forEach(o=>{o.x+=o.vx;o.y+=o.vy;o.vy+=0.2;ctx.fillStyle=o.c;ctx.fillRect(o.x,o.y,o.s,o.s)});p=p.filter(o=>o.y<innerHeight+30);requestAnimationFrame(an)}an();start();
+</script></body></html>
