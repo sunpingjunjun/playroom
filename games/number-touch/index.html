@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数字を順番にタッチしよう</title>
+
+<style>
+body{
+    margin:0;
+    font-family:sans-serif;
+    text-align:center;
+    background:#f0f8ff;
+}
+
+h1{
+    color:#003366;
+    margin:10px;
+}
+
+#message{
+    font-size:30px;
+    margin:10px;
+    font-weight:bold;
+}
+
+#game{
+    position:relative;
+    width:100vw;
+    height:75vh;
+    overflow:hidden;
+}
+
+.number{
+    position:absolute;
+    width:90px;
+    height:90px;
+    border:none;
+    border-radius:50%;
+    font-size:42px;
+    font-weight:bold;
+    background:#4da6ff;
+    color:white;
+    cursor:pointer;
+    box-shadow:2px 2px 5px rgba(0,0,0,0.3);
+}
+
+.number:disabled{
+    cursor:default;
+}
+
+.correct{
+    background:#4CAF50 !important;
+}
+
+.hint{
+    background:orange !important;
+    animation:blink 0.8s infinite;
+    transform:scale(1.2);
+}
+
+@keyframes blink{
+    0%{opacity:1;}
+    50%{opacity:0.3;}
+    100%{opacity:1;}
+}
+
+#clear{
+    margin-top:10px;
+    font-size:40px;
+    color:green;
+    font-weight:bold;
+}
+
+.restart-button{
+    margin-top:20px;
+    font-size:28px;
+    padding:15px 30px;
+    border:none;
+    border-radius:15px;
+    background:#ff9800;
+    color:white;
+    cursor:pointer;
+}
+
+.restart-button:hover{
+    background:#f57c00;
+}
+</style>
+</head>
+
+<body>
+
+<h1>数字を順番にタッチしよう</h1>
+
+<div id="message">1 を押そう！</div>
+
+<div id="game"></div>
+
+<div id="clear"></div>
+
+<script>
+
+const maxNumber = 10;
+
+let nextNumber = 1;
+let wrongCount = 0;
+
+const game = document.getElementById("game");
+
+function createGame(){
+
+    game.innerHTML = "";
+
+    nextNumber = 1;
+    wrongCount = 0;
+
+    document.getElementById("message").textContent =
+    "1 を押そう！";
+
+    document.getElementById("clear").innerHTML = "";
+
+    const gameWidth = window.innerWidth - 110;
+    const gameHeight = game.clientHeight - 110;
+
+    for(let i=1;i<=maxNumber;i++){
+
+        const btn = document.createElement("button");
+
+        btn.textContent = i;
+        btn.className = "number";
+        btn.dataset.number = i;
+
+        const x = Math.random() * gameWidth;
+        const y = Math.random() * gameHeight;
+
+        btn.style.left = x + "px";
+        btn.style.top = y + "px";
+
+        btn.addEventListener("click", () => {
+            checkNumber(i, btn);
+        });
+
+        game.appendChild(btn);
+    }
+}
+
+function removeHint(){
+
+    document
+    .querySelectorAll(".number")
+    .forEach(btn => btn.classList.remove("hint"));
+}
+
+function showHint(){
+
+    removeHint();
+
+    const target =
+        document.querySelector(
+            `[data-number="${nextNumber}"]`
+        );
+
+    if(target){
+        target.classList.add("hint");
+    }
+}
+
+function checkNumber(number, button){
+
+    if(number === nextNumber){
+
+        button.classList.add("correct");
+        button.classList.remove("hint");
+        button.disabled = true;
+
+        nextNumber++;
+        wrongCount = 0;
+
+        if(nextNumber <= maxNumber){
+
+            document.getElementById("message").textContent =
+            `${nextNumber} を押そう！`;
+
+        }else{
+
+            document.getElementById("message").textContent =
+            "よくできました！";
+
+            document.getElementById("clear").innerHTML =
+            `
+            🎉 クリア！ 🎉
+            <br>
+            <button class="restart-button"
+                    onclick="createGame()">
+                もう一度やる
+            </button>
+            `;
+        }
+
+    }else{
+
+        wrongCount++;
+
+        document.getElementById("message").textContent =
+        `ちがうよ！ ${nextNumber} を押そう`;
+
+        if(wrongCount >= 3){
+            showHint();
+        }
+    }
+}
+
+window.addEventListener("resize", createGame);
+
+createGame();
+
+</script>
+
+</body>
+</html>
