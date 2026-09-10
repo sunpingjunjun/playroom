@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<title>算数ブロック</title>
+
+<style>
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    touch-action: none;
+    background: #f5f5f5;
+    font-family: sans-serif;
+}
+
+#playArea {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+#resetBtn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+
+    padding: 10px 16px;
+    font-size: 18px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #333;
+    color: white;
+}
+
+.block {
+    position: absolute;
+
+    width: 75px;
+    height: 75px;
+
+    background: #FFD84D;
+    border: 2px solid #C8A200;
+    border-radius: 8px;
+
+    box-sizing: border-box;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+
+    touch-action: none;
+}
+
+.block.dragging {
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+}
+</style>
+</head>
+
+<body>
+
+<button id="resetBtn">リセット</button>
+
+<div id="playArea"></div>
+
+<script>
+
+const area = document.getElementById("playArea");
+const initialPositions = [];
+
+const BLOCK_SIZE = 75;
+const GAP = 8;
+
+function createBlocks() {
+
+    let id = 0;
+
+    // 左の10個（5×2）
+    const leftX = 40;
+    const leftY = 120;
+
+    for(let row = 0; row < 2; row++) {
+        for(let col = 0; col < 5; col++) {
+
+            addBlock(
+                id++,
+                leftX + col * (BLOCK_SIZE + GAP),
+                leftY + row * (BLOCK_SIZE + GAP)
+            );
+        }
+    }
+
+    // 右の10個（5×2）
+    const rightX = 500;
+    const rightY = 120;
+
+    for(let row = 0; row < 2; row++) {
+        for(let col = 0; col < 5; col++) {
+
+            addBlock(
+                id++,
+                rightX + col * (BLOCK_SIZE + GAP),
+                rightY + row * (BLOCK_SIZE + GAP)
+            );
+        }
+    }
+}
+
+function addBlock(id, x, y) {
+
+    const block = document.createElement("div");
+
+    block.className = "block";
+    block.dataset.id = id;
+
+    block.style.left = x + "px";
+    block.style.top = y + "px";
+
+    initialPositions.push({
+        id: id,
+        x: x,
+        y: y
+    });
+
+    area.appendChild(block);
+
+    let offsetX = 0;
+    let offsetY = 0;
+
+    block.addEventListener("pointerdown", (e) => {
+
+        block.classList.add("dragging");
+
+        block.setPointerCapture(e.pointerId);
+
+        offsetX = e.clientX - block.offsetLeft;
+        offsetY = e.clientY - block.offsetTop;
+
+        block.style.zIndex = Date.now();
+
+        function move(ev) {
+
+            block.style.left =
+                (ev.clientX - offsetX) + "px";
+
+            block.style.top =
+                (ev.clientY - offsetY) + "px";
+        }
+
+        function up() {
+
+            block.classList.remove("dragging");
+
+            block.removeEventListener(
+                "pointermove",
+                move
+            );
+
+            block.removeEventListener(
+                "pointerup",
+                up
+            );
+        }
+
+        block.addEventListener(
+            "pointermove",
+            move
+        );
+
+        block.addEventListener(
+            "pointerup",
+            up
+        );
+    });
+}
+
+createBlocks();
+
+document
+.getElementById("resetBtn")
+.addEventListener("click", () => {
+
+    document
+    .querySelectorAll(".block")
+    .forEach(block => {
+
+        const pos = initialPositions.find(
+            p => p.id == block.dataset.id
+        );
+
+        block.style.left = pos.x + "px";
+        block.style.top = pos.y + "px";
+    });
+});
+
+</script>
+
+</body>
+</html>
