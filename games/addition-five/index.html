@@ -26,4 +26,5 @@ function check(v){let bs=document.querySelectorAll('.btn');bs.forEach(b=>b.disab
 function finish(){$('objects').innerHTML='';$('question').textContent='';$('answers').innerHTML='';$('finalMedals').innerHTML='🏅'.repeat(m);if(m===10){$('trophy').style.display='block';$('result').innerHTML='ぜんもんせいかい！ おめでとう！<br>めだるを 10こ とれたよ！';for(let i=0;i<10;i++)confetti(200);}else{$('result').innerHTML='めだるを '+m+'こ とれたよ！<br>よくがんばったね';}$('restart').style.display='inline-block';}
 $('restart').onclick=start;
 const cv=$('cv'),ctx=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;let p=[];function confetti(n){for(let i=0;i<n;i++)p.push({x:innerWidth/2,y:120,vx:(Math.random()-.5)*10,vy:-Math.random()*10,s:4+Math.random()*6,c:`hsl(${Math.random()*360},90%,60%)`})}function an(){ctx.clearRect(0,0,cv.width,cv.height);p.forEach(o=>{o.x+=o.vx;o.y+=o.vy;o.vy+=0.2;ctx.fillStyle=o.c;ctx.fillRect(o.x,o.y,o.s,o.s)});p=p.filter(o=>o.y<innerHeight+30);requestAnimationFrame(an)}an();start();
-</script></body></html>
+</script><script src="../../portal-nav.js"></script>
+</body></html>
