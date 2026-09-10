@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>時計学習アプリ</title>
+
+<style>
+body{
+    font-family:"Yu Gothic",sans-serif;
+    text-align:center;
+    background:#f0f4f8;
+    margin:20px;
+}
+
+h1{
+    font-size:2em;
+}
+
+canvas{
+    background:white;
+    border-radius:50%;
+    border:4px solid #333;
+    touch-action:none;
+}
+
+#timeDisplay{
+    font-size:40px;
+    font-weight:bold;
+    margin-top:20px;
+}
+
+#guide{
+    margin-top:10px;
+    font-size:20px;
+}
+</style>
+</head>
+<body>
+
+<h1>とけいのべんきょう</h1>
+
+<canvas id="clock" width="500" height="500"></canvas>
+
+<div id="timeDisplay"></div>
+
+<div id="guide">
+🔴 短針　🔵 長針<br>
+針を動かして時刻をつくろう
+</div>
+
+<script>
+
+const canvas = document.getElementById("clock");
+const ctx = canvas.getContext("2d");
+
+const cx = 250;
+const cy = 250;
+const radius = 220;
+
+let hours = 12;
+let minutes = 0;
+
+let dragging = null;
+let previousMinute = 0;
+
+function drawClock(){
+
+    ctx.clearRect(0,0,500,500);
+
+    //外枠
+    ctx.beginPath();
+    ctx.arc(cx,cy,radius,0,Math.PI*2);
+    ctx.fillStyle="white";
+    ctx.fill();
+    ctx.lineWidth=4;
+    ctx.strokeStyle="#333";
+    ctx.stroke();
+
+    //60目盛り
+    for(let i=0;i<60;i++){
+
+        let angle=(i*6-90)*Math.PI/180;
+
+        let outer=radius-5;
+        let inner=(i%5===0)?radius-28:radius-16;
+
+        ctx.beginPath();
+        ctx.moveTo(
+            cx + inner*Math.cos(angle),
+            cy + inner*Math.sin(angle)
+        );
+
+        ctx.lineTo(
+            cx + outer*Math.cos(angle),
+            cy + outer*Math.sin(angle)
+        );
+
+        ctx.lineWidth=(i%5===0)?3:1;
+        ctx.strokeStyle="#000";
+        ctx.stroke();
+    }
+
+    //数字
+    for(let n=1;n<=12;n++){
+
+        let angle=(n*30-90)*Math.PI/180;
+        let r=170;
+
+        ctx.font="30px sans-serif";
+        ctx.fillStyle="black";
+        ctx.textAlign="center";
+        ctx.textBaseline="middle";
+
+        ctx.fillText(
+            n,
+            cx+r*Math.cos(angle),
+            cy+r*Math.sin(angle)
+        );
+    }
+
+    //長針
+    const minuteAngle=
+    (minutes*6-90)*Math.PI/180;
+
+    drawHand(
+        minuteAngle,
+        170,
+        6,
+        "blue"
+    );
+
+    //短針
+    const hourAngle=
+    (((hours%12)+(minutes/60))*30-90)
+    *Math.PI/180;
+
+    drawHand(
+        hourAngle,
+        110,
+        10,
+        "red"
+    );
+
+    //中心
+    ctx.beginPath();
+    ctx.arc(cx,cy,10,0,Math.PI*2);
+    ctx.fillStyle="black";
+    ctx.fill();
+}
+
+function drawHand(angle,length,width,color){
+
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+
+    ctx.lineTo(
+        cx + length*Math.cos(angle),
+        cy + length*Math.sin(angle)
+    );
+
+    ctx.strokeStyle=color;
+    ctx.lineWidth=width;
+    ctx.lineCap="round";
+    ctx.stroke();
+}
+
+function updateDisplay(){
+
+    document.getElementById("timeDisplay")
+    .textContent =
+    hours + "時" +
+    String(minutes).padStart(2,"0") +
+    "分";
+}
+
+function getPosition(e){
+
+    const rect = canvas.getBoundingClientRect();
+
+    if(e.touches){
+        return{
+            x:e.touches[0].clientX-rect.left,
+            y:e.touches[0].clientY-rect.top
+        };
+    }
+
+    return{
+        x:e.clientX-rect.left,
+        y:e.clientY-rect.top
+    };
+}
+
+function getAngle(x,y){
+
+    return Math.atan2(
+        y-cy,
+        x-cx
+    );
+}
+
+function handTip(angle,length){
+
+    return{
+        x:cx+length*Math.cos(angle),
+        y:cy+length*Math.sin(angle)
+    };
+}
+
+function distance(x1,y1,x2,y2){
+
+    return Math.hypot(
+        x1-x2,
+        y1-y2
+    );
+}
+
+function startDrag(e){
+
+    const pos=getPosition(e);
+
+    const minuteAngle=
+    (minutes*6-90)*Math.PI/180;
+
+    const hourAngle=
+    (((hours%12)+(minutes/60))*30-90)
+    *Math.PI/180;
+
+    const minuteTip=
+    handTip(minuteAngle,170);
+
+    const hourTip=
+    handTip(hourAngle,110);
+
+    if(distance(
+        pos.x,pos.y,
+        minuteTip.x,minuteTip.y
+    )<25){
+
+        dragging="minute";
+
+    }else if(distance(
+        pos.x,pos.y,
+        hourTip.x,hourTip.y
+    )<25){
+
+        dragging="hour";
+    }
+}
+
+function moveDrag(e){
+
+    if(!dragging) return;
+
+    const pos=getPosition(e);
+
+    let angle=
+    getAngle(pos.x,pos.y);
+
+    let deg=
+    angle*180/Math.PI+90;
+
+    if(deg<0){
+        deg+=360;
+    }
+
+    if(dragging==="minute"){
+
+        let newMinute=
+        Math.round(deg/6)%60;
+
+        // 長針が1周したら1時間進む
+        if(previousMinute>=55 && newMinute<=5){
+
+            hours++;
+
+            if(hours>12){
+                hours=1;
+            }
+        }
+
+        // 戻したら1時間戻る
+        if(previousMinute<=5 && newMinute>=55){
+
+            hours--;
+
+            if(hours<1){
+                hours=12;
+            }
+        }
+
+        minutes=newMinute;
+        previousMinute=newMinute;
+    }
+
+    if(dragging==="hour"){
+
+        let totalHour=
+        deg/30;
+
+        let h=
+        Math.floor(totalHour);
+
+        if(h===0){
+            h=12;
+        }
+
+        hours=h;
+
+        minutes=
+        Math.round(
+            (totalHour-Math.floor(totalHour))
+            *60
+        );
+
+        if(minutes===60){
+            minutes=0;
+        }
+
+        previousMinute=minutes;
+    }
+
+    drawClock();
+    updateDisplay();
+
+    e.preventDefault();
+}
+
+function stopDrag(){
+    dragging=null;
+}
+
+canvas.addEventListener(
+    "mousedown",
+    startDrag
+);
+
+canvas.addEventListener(
+    "mousemove",
+    moveDrag
+);
+
+window.addEventListener(
+    "mouseup",
+    stopDrag
+);
+
+canvas.addEventListener(
+    "touchstart",
+    startDrag
+);
+
+canvas.addEventListener(
+    "touchmove",
+    moveDrag
+);
+
+canvas.addEventListener(
+    "touchend",
+    stopDrag
+);
+
+drawClock();
+updateDisplay();
+
+</script>
+
+</body>
+</html>
