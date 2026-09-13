@@ -2,6 +2,16 @@ const $=id=>document.getElementById(id);
 let mode='free',limit=5,left=[],right=[],history=[],sound=false,problem=0,solved=false,selection=null,drag=null;
 const tasks={5:[[1,1],[2,1],[2,2],[3,2],[1,3]],10:[[2,3],[4,2],[3,4],[5,3],[4,5],[5,5]]};
 const sum=a=>a.reduce((n,p)=>n+p.value,0);
+const mascotFrames={neutral:'penguin.png',strained:'penguin-strained.png',relieved:'penguin-relieved.png'};
+Object.values(mascotFrames).forEach(src=>{const img=new Image();img.src=src});
+function updateMascot(l,r){
+  const expression=l>0&&l===r?'relieved':Math.abs(l-r)>=2?'strained':'neutral';
+  const mascot=$('mascot');
+  if(mascot.dataset.expression!==expression){
+    mascot.dataset.expression=expression;
+    mascot.src=mascotFrames[expression];
+  }
+}
 function speak(t){if(sound&&'speechSynthesis'in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ja-JP';u.rate=.8;speechSynthesis.speak(u)}}
 let effects=true,audioContext=null,wasBalanced=false,celebrationTimer=0;
 function unlockAudio(){if(!effects)return;try{audioContext ||= new (window.AudioContext||window.webkitAudioContext)();if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});}catch{}}
@@ -40,7 +50,7 @@ scaleAngle+=scaleVelocity*dt;
 if(Math.abs(target-scaleAngle)<.015&&Math.abs(scaleVelocity)<.04){scaleAngle=target;scaleVelocity=0;drawScale(scaleAngle);return}
 drawScale(scaleAngle);scaleFrame=requestAnimationFrame(stepScale)}
 
-function render(){const l=sum(left),r=sum(right);const balanced=l>0&&l===r;if(balanced&&!wasBalanced)celebrate();wasBalanced=balanced;if(mode==='quiz'&&l===r&&!solved){solved=true;speak('できた！ぴったり！')}for(const s of ['left','right']){$(s+'Pieces').replaceChildren(...(s==='left'?left:right).map((p,i)=>piece(p,s,i)));$(s).setAttribute('aria-label',(s==='left'?'ひだり':'みぎ')+'の おさら');$(s).setAttribute('aria-disabled',String(solved||mode==='quiz'&&s==='left'))}palette();$('feedback').textContent=solved?'できた！ ぴったり！':l===r&&l>0?'ぴったり！':'';$('next').hidden=!solved;$('undo').disabled=!history.length||solved;$('hint').textContent='つかんで おさらに のせよう';positionScale()}
+function render(){const l=sum(left),r=sum(right);const balanced=l>0&&l===r;updateMascot(l,r);if(balanced&&!wasBalanced)celebrate();wasBalanced=balanced;if(mode==='quiz'&&l===r&&!solved){solved=true;speak('できた！ぴったり！')}for(const s of ['left','right']){$(s+'Pieces').replaceChildren(...(s==='left'?left:right).map((p,i)=>piece(p,s,i)));$(s).setAttribute('aria-label',(s==='left'?'ひだり':'みぎ')+'の おさら');$(s).setAttribute('aria-disabled',String(solved||mode==='quiz'&&s==='left'))}palette();$('feedback').textContent=solved?'できた！ ぴったり！':l===r&&l>0?'ぴったり！':'';$('next').hidden=!solved;$('undo').disabled=!history.length||solved;$('hint').textContent='つかんで おさらに のせよう';positionScale()}
 function palette(){$('numbers').replaceChildren(...Array.from({length:limit+1},(_,i)=>piece({value:i||1,duck:i===0}))) }
 function start(){clearCelebration();cancelDrag();clearPick();history=[];solved=false;right=[];if(mode==='quiz'){const [a,b]=tasks[limit][problem%tasks[limit].length];left=[{value:a},{value:b}];$('prompt').textContent='おなじ おもさに しよう'}else{left=[];$('prompt').textContent='じゆうに あそぼう'}render()}
 function enter(m){mode=m;problem=0;$('home').hidden=true;$('game').hidden=false;start();$('prompt').focus();speak($('prompt').textContent)}
