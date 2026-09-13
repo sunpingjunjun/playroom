@@ -7,3 +7,9 @@
 .mascot{width:clamp(140px,23vw,240px);height:clamp(180px,29vw,290px);top:57%}
 .number.duck{width:88px;height:82px}.piece.duck{width:48px;height:54px}
 @media(max-width:650px){.welcome-duck{width:155px;height:155px}.mascot{width:27vw;height:200px;max-width:170px}.number.duck{width:65px;height:68px}.piece.duck{width:36px;height:42px}}
+
+/* Keep the PLAYROOM link at the bottom right without covering game controls. */
+body{min-height:100svh;display:flex;flex-direction:column}
+main{width:100%;flex:1}
+.home{min-height:calc(100svh - 104px)}
+body>.playroom-home-button{position:static;align-self:flex-end;margin:12px max(14px, env(safe-area-inset-right)) 18px 14px}
