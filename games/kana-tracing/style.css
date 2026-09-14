@@ -11,3 +11,5 @@
 #undo{margin-left:auto;border-color:#e9cbd0;color:#a74455}
 #clearAll{border-color:#e9cbd0;color:#a74455}
 @media(max-width:650px){.tabs{flex-wrap:wrap}#undo{margin-left:0}}
+
+#confetti{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:20}#confetti i{position:absolute;left:var(--x);top:-18px;width:11px;height:17px;background:var(--color);border-radius:2px;animation:confetti-fall 1.5s var(--delay) ease-in forwards}@keyframes confetti-fall{to{transform:translate(var(--dx),105vh) rotate(690deg);opacity:0}}@media(prefers-reduced-motion:reduce){#confetti i{animation-duration:.1s}}
