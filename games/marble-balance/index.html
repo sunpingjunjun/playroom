@@ -18,6 +18,7 @@
         <span id="statusIcon">◉</span>
         <span id="statusText">ゴールをめざそう</span>
       </div>
+      <button id="levelButton" class="level-button" type="button" aria-label="ステージを選ぶ">STAGE <b id="levelNumber">1</b></button>
       <div id="timer" class="timer">0.0秒</div>
       <button id="resetButton" class="icon-button" type="button" aria-label="やり直す">↻</button>
     </header>
@@ -45,8 +46,19 @@
       <p id="resultKicker">CLEAR!</p>
       <h2 id="resultTitle">ゴール！</h2>
       <p id="resultTime"></p>
-      <button id="againButton" class="start-button" type="button">もう一度</button>
+      <div class="result-actions">
+        <button id="againButton" class="secondary-button" type="button">もう一度</button>
+        <button id="nextButton" class="start-button" type="button">次のステージ</button>
+      </div>
     </div>
+
+    <section id="levelPanel" class="level-panel" hidden aria-labelledby="levelTitle">
+      <div class="panel-heading">
+        <div><p class="eyebrow">SELECT STAGE</p><h2 id="levelTitle">ステージを選ぶ</h2></div>
+        <button id="closeLevels" class="icon-button" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div id="levelGrid" class="level-grid"></div>
+    </section>
   </main>
   <script src="./app.js"></script>
 </body>
