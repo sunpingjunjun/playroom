@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#07131d">
+  <meta name="description" content="iPadを傾けてビー玉をゴールまで運ぶバランスゲーム">
+  <title>コロコロビー玉</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307131d'/%3E%3Ccircle cx='32' cy='32' r='20' fill='%2387e7ff' stroke='white' stroke-width='4'/%3E%3Ccircle cx='25' cy='24' r='6' fill='white' opacity='.72'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <canvas id="game" aria-label="ビー玉迷路"></canvas>
+
+    <header class="hud">
+      <div class="status" aria-live="polite">
+        <span id="statusIcon">◉</span>
+        <span id="statusText">ゴールをめざそう</span>
+      </div>
+      <div id="timer" class="timer">0.0秒</div>
+      <button id="resetButton" class="icon-button" type="button" aria-label="やり直す">↻</button>
+    </header>
+
+    <section id="startPanel" class="start-panel" aria-labelledby="title">
+      <div class="marble-mark" aria-hidden="true"><span></span></div>
+      <p class="eyebrow">TILT MAZE</p>
+      <h1 id="title">コロコロ<br>ビー玉</h1>
+      <p>iPadを平らに置いてスタート。そこから少し傾けて、星のゴールへ。</p>
+      <button id="startButton" class="start-button" type="button">傾き操作をオン</button>
+      <p id="permissionNote" class="permission-note">端末の動きへのアクセスを使用します</p>
+    </section>
+
+    <div id="touchPad" class="touch-pad" aria-label="タッチ操作">
+      <div class="pad-row"><button data-dir="up" aria-label="上">▲</button></div>
+      <div class="pad-row">
+        <button data-dir="left" aria-label="左">◀</button>
+        <button data-dir="stop" aria-label="停止">●</button>
+        <button data-dir="right" aria-label="右">▶</button>
+      </div>
+      <div class="pad-row"><button data-dir="down" aria-label="下">▼</button></div>
+    </div>
+
+    <div id="result" class="result" hidden>
+      <p id="resultKicker">CLEAR!</p>
+      <h2 id="resultTitle">ゴール！</h2>
+      <p id="resultTime"></p>
+      <button id="againButton" class="start-button" type="button">もう一度</button>
+    </div>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

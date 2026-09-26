@@ -1,0 +1,148 @@
+:root {
+  color-scheme: dark;
+  font-family: ui-rounded, "Hiragino Maru Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+  background: #07131d;
+  color: #f5fbff;
+  touch-action: none;
+}
+
+* { box-sizing: border-box; }
+
+html, body, .game-shell {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% 10%, rgba(39, 183, 183, .22), transparent 40%),
+    #07131d;
+  overscroll-behavior: none;
+}
+
+.game-shell { position: relative; }
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hud {
+  position: absolute;
+  z-index: 5;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
+  right: max(14px, env(safe-area-inset-right));
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 16px;
+  border: 1px solid rgba(159, 239, 236, .25);
+  border-radius: 999px;
+  background: rgba(3, 13, 20, .7);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .3);
+  backdrop-filter: blur(16px);
+}
+
+.status { display: flex; align-items: center; gap: 8px; font-weight: 750; }
+.status span:first-child { color: #77e4dc; }
+.timer { min-width: 74px; text-align: right; font-size: 1.12rem; font-weight: 850; font-variant-numeric: tabular-nums; }
+
+button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .08);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.start-panel, .result {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  top: 50%;
+  width: min(88vw, 430px);
+  transform: translate(-50%, -50%);
+  padding: 30px;
+  border: 1px solid rgba(155, 237, 232, .28);
+  border-radius: 32px;
+  background: linear-gradient(145deg, rgba(13, 43, 54, .95), rgba(4, 17, 26, .96));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, .5), inset 0 1px rgba(255,255,255,.08);
+  text-align: center;
+  backdrop-filter: blur(20px);
+}
+
+.start-panel.hidden { display: none; }
+.eyebrow, .result > p:first-child { margin: 12px 0 6px; color: #70ddd5; font-size: .8rem; font-weight: 900; letter-spacing: .22em; }
+h1 { margin: 0; font-size: clamp(3rem, 12vw, 5rem); line-height: .9; letter-spacing: -.08em; }
+.start-panel > p:not(.eyebrow), .result p { line-height: 1.75; color: #bfd0d7; }
+
+.marble-mark {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto;
+  padding: 10px;
+  border: 2px solid rgba(112, 221, 213, .45);
+  border-radius: 50%;
+  box-shadow: 0 0 28px rgba(80, 211, 220, .22);
+}
+
+.marble-mark span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, white 0 9%, #baf3ff 11%, #54bdd8 58%, #16738e 100%);
+}
+
+.start-button {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f7c84c, #ee8a35);
+  box-shadow: 0 10px 26px rgba(238, 138, 53, .25);
+  color: #1b1406;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.start-button:active, .icon-button:active, .touch-pad button:active { transform: scale(.96); }
+.permission-note { margin-bottom: 0; font-size: .8rem; opacity: .7; }
+
+.touch-pad {
+  position: absolute;
+  z-index: 6;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: none;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 22px;
+  background: rgba(3, 13, 20, .72);
+  backdrop-filter: blur(12px);
+}
+
+.touch-pad.visible { display: grid; }
+.pad-row { display: flex; justify-content: center; gap: 3px; }
+.touch-pad button { width: 44px; height: 39px; border: 0; border-radius: 10px; background: rgba(255,255,255,.13); }
+.result h2 { margin: 5px 0; font-size: 2.7rem; }
+
+@media (min-width: 800px) {
+  .hud { left: 50%; right: auto; width: min(720px, calc(100% - 40px)); transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .marble-mark { animation: float 2.6s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-7px) rotate(6deg); } }
+}
