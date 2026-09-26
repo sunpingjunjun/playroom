@@ -47,9 +47,10 @@
     tiltY: 0,
     targetX: 0,
     targetY: 0,
-    centerBeta: 0,
-    centerGamma: 0,
+    centerTiltX: 0,
+    centerTiltY: 0,
     calibrationSamples: [],
+    calibrating: false,
     levelIndex: Math.max(0, Math.min(LEVELS.length - 1, savedUnlocked - 1)),
     unlocked: Math.max(1, Math.min(LEVELS.length, savedUnlocked)),
     paused: false,
@@ -217,26 +218,50 @@
     update(dt,now);draw();requestAnimationFrame(frame);
   }
 
-  function onOrientation(event) {
-    if (event.gamma==null || event.beta==null) return;
-    // Use the first few readings as the neutral, flat position. This also
-    // compensates for a case or table that is not perfectly level.
-    if (state.calibrationSamples.length < 12) {
-      state.calibrationSamples.push([event.beta, event.gamma]);
-      state.centerBeta = state.calibrationSamples.reduce((sum, v) => sum + v[0], 0) / state.calibrationSamples.length;
-      state.centerGamma = state.calibrationSamples.reduce((sum, v) => sum + v[1], 0) / state.calibrationSamples.length;
-      state.targetX = state.targetY = 0;
-      return;
-    }
+  function screenTilt(event) {
+    let x = event.gamma;
+    let y = event.beta;
     const angle=(screen.orientation && screen.orientation.angle) || window.orientation || 0;
-    const deadzone = value => Math.abs(value) < .3 ? 0 : value - Math.sign(value) * .3;
-    // Keep the device nearly level: a tilt of roughly half a degree starts
-    // the marble, and about six degrees reaches full acceleration.
-    let x=deadzone(event.gamma-state.centerGamma)/6;
-    let y=deadzone(event.beta-state.centerBeta)/6;
     if (angle===90) [x,y]=[y,-x];
     else if (angle===-90 || angle===270) [x,y]=[-y,x];
-    else if (angle===180) {x=-x;y=-y;}
+    else if (angle===180) { x=-x; y=-y; }
+    return [x,y];
+  }
+
+  function median(values) {
+    const sorted = [...values].sort((a,b) => a-b);
+    return sorted[Math.floor(sorted.length/2)];
+  }
+
+  function angleDelta(value, center) {
+    return ((value - center + 540) % 360) - 180;
+  }
+
+  function onOrientation(event) {
+    if (event.gamma==null || event.beta==null) return;
+    const [screenX, screenY] = screenTilt(event);
+
+    // The exact screen angle held when permission is granted becomes level.
+    // A short median sample rejects the initial sensor jump and hand shake.
+    if (state.calibrating) {
+      state.calibrationSamples.push([screenX, screenY]);
+      state.targetX = state.targetY = 0;
+      if (state.calibrationSamples.length >= 24) {
+        state.centerTiltX = median(state.calibrationSamples.map(v => v[0]));
+        state.centerTiltY = median(state.calibrationSamples.map(v => v[1]));
+        state.calibrating = false;
+        state.running = true;
+        startButton.disabled = false;
+        startButton.textContent = '傾き操作をオン';
+        panel.classList.add('hidden');
+        reset();
+      }
+      return;
+    }
+
+    const deadzone = value => Math.abs(value) < .3 ? 0 : value - Math.sign(value) * .3;
+    let x=deadzone(angleDelta(screenX,state.centerTiltX))/6;
+    let y=deadzone(angleDelta(screenY,state.centerTiltY))/6;
     state.targetX=Math.max(-1,Math.min(1,x));
     state.targetY=Math.max(-1,Math.min(1,y));
   }
@@ -250,15 +275,20 @@
     } catch { allowed=false; }
     if (allowed && 'DeviceOrientationEvent' in window) {
       state.calibrationSamples = [];
-      state.centerBeta = state.centerGamma = 0;
+      state.calibrating = true;
+      state.running = false;
+      state.targetX = state.targetY = 0;
       window.addEventListener('deviceorientation',onOrientation,true);
-      permissionNote.textContent='平らな状態を基準にしています…';
+      startButton.disabled = true;
+      startButton.textContent = 'この角度を水平に設定中…';
+      permissionNote.textContent='そのまま約0.4秒間、動かさないでください';
     } else {
       touchPad.classList.add('visible');
       permissionNote.textContent='画面の方向ボタンで操作できます';
+      panel.classList.add('hidden');
+      state.running=true;
+      reset();
     }
-    panel.classList.add('hidden');
-    state.running=true; reset();
   }
 
   function renderLevelGrid() {
