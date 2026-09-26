@@ -14,6 +14,29 @@
   const resultTitle = document.querySelector('#resultTitle');
   const resultKicker = document.querySelector('#resultKicker');
   const resultTime = document.querySelector('#resultTime');
+  const nextButton = document.querySelector('#nextButton');
+  const levelButton = document.querySelector('#levelButton');
+  const levelNumber = document.querySelector('#levelNumber');
+  const levelPanel = document.querySelector('#levelPanel');
+  const levelGrid = document.querySelector('#levelGrid');
+  const closeLevels = document.querySelector('#closeLevels');
+
+  const LEVELS = [
+    { name:'はじめの一歩', start:[.08,.10], goal:[.91,.86], walls:[[.20,.18,.03,.50],[.20,.68,.34,.03],[.50,.34,.03,.37],[.50,.34,.28,.03],[.76,.34,.03,.40]], holes:[[.35,.43]] },
+    { name:'ジグザグ', start:[.08,.88], goal:[.92,.12], walls:[[.18,.18,.03,.62],[.18,.18,.28,.03],[.43,.18,.03,.58],[.43,.73,.29,.03],[.70,.25,.03,.51]], holes:[[.30,.48],[.57,.47]] },
+    { name:'ふたつの門', start:[.08,.10], goal:[.92,.88], walls:[[.22,.00,.03,.42],[.22,.58,.03,.42],[.47,.18,.03,.64],[.72,.00,.03,.42],[.72,.58,.03,.42]], holes:[[.35,.28],[.60,.72],[.84,.32]] },
+    { name:'クロスロード', start:[.09,.88], goal:[.91,.12], walls:[[.16,.48,.30,.03],[.54,.48,.30,.03],[.48,.12,.03,.29],[.48,.59,.03,.29],[.24,.22,.03,.18],[.73,.60,.03,.18]], holes:[[.33,.35],[.67,.65],[.50,.50]] },
+    { name:'うずまき', start:[.08,.10], goal:[.50,.51], walls:[[.15,.18,.70,.03],[.82,.18,.03,.64],[.27,.79,.58,.03],[.27,.35,.03,.47],[.27,.35,.40,.03],[.64,.35,.03,.29],[.42,.61,.25,.03]], holes:[[.18,.66],[.72,.68],[.52,.46]] },
+    { name:'スラローム', start:[.08,.50], goal:[.92,.50], walls:[[.18,.00,.03,.62],[.34,.38,.03,.62],[.50,.00,.03,.62],[.66,.38,.03,.62],[.82,.00,.03,.62]], holes:[[.27,.78],[.43,.22],[.59,.78],[.75,.22]] },
+    { name:'ほそみち', start:[.08,.10], goal:[.92,.88], walls:[[.16,.20,.60,.03],[.16,.20,.03,.55],[.16,.72,.63,.03],[.76,.38,.03,.37],[.34,.38,.45,.03],[.34,.38,.03,.20],[.34,.55,.27,.03]], holes:[[.25,.47],[.48,.47],[.68,.63],[.86,.50]] },
+    { name:'とりで', start:[.08,.88], goal:[.50,.50], walls:[[.18,.18,.64,.03],[.18,.79,.64,.03],[.18,.18,.03,.22],[.18,.58,.03,.24],[.79,.18,.03,.25],[.79,.58,.03,.24],[.34,.34,.32,.03],[.34,.64,.32,.03],[.34,.34,.03,.12],[.34,.55,.03,.12],[.63,.34,.03,.12],[.63,.55,.03,.12]], holes:[[.26,.30],[.74,.30],[.26,.70],[.74,.70]] },
+    { name:'あなの森', start:[.08,.10], goal:[.92,.88], walls:[[.18,.30,.22,.03],[.18,.30,.03,.30],[.36,.57,.25,.03],[.58,.18,.03,.42],[.58,.18,.24,.03],[.78,.42,.03,.40]], holes:[[.25,.18],[.32,.46],[.48,.28],[.49,.72],[.68,.50],[.88,.32]] },
+    { name:'ファイナル', start:[.08,.90], goal:[.92,.10], walls:[[.14,.14,.03,.62],[.14,.14,.25,.03],[.36,.14,.03,.45],[.36,.56,.25,.03],[.58,.32,.03,.27],[.58,.32,.27,.03],[.82,.32,.03,.52],[.31,.78,.54,.03]], holes:[[.25,.30],[.27,.68],[.47,.42],[.49,.88],[.70,.46],[.72,.68],[.91,.50]] }
+  ];
+
+  const savedUnlocked = Number(localStorage.getItem('marbleUnlocked') || 1);
+  let bestTimes = {};
+  try { bestTimes = JSON.parse(localStorage.getItem('marbleBestTimes') || '{}'); } catch {}
 
   const state = {
     running: false,
@@ -27,6 +50,9 @@
     centerBeta: 0,
     centerGamma: 0,
     calibrationSamples: [],
+    levelIndex: Math.max(0, Math.min(LEVELS.length - 1, savedUnlocked - 1)),
+    unlocked: Math.max(1, Math.min(LEVELS.length, savedUnlocked)),
+    paused: false,
     lastFrame: performance.now(),
     board: null,
     walls: [],
@@ -54,31 +80,30 @@
     state.board = board;
     const u = Math.min(board.w, board.h) / 10;
     const t = Math.max(11, u * .22);
-    const specs = [
-      [.18,.18,.03,.46], [.18,.64,.32,.03], [.35,.30,.03,.34],
-      [.35,.30,.29,.03], [.62,.30,.03,.43], [.62,.73,.21,.03],
-      [.80,.18,.03,.34], [.47,.50,.17,.03]
-    ];
+    const level = LEVELS[state.levelIndex];
+    const specs = level.walls;
     state.walls = specs.map(([x,y,ww,hh]) => ({
       x: board.x + board.w*x, y: board.y + board.h*y,
       w: Math.max(board.w*ww,t), h: Math.max(board.h*hh,t)
     }));
     const point = (x,y) => ({ x: board.x+board.w*x, y: board.y+board.h*y });
-    state.holes = [[.27,.39],[.52,.78],[.72,.42]].map(([x,y]) => ({...point(x,y), r:u*.34}));
-    state.goal = {...point(.91,.86), r:u*.43};
+    state.holes = level.holes.map(([x,y]) => ({...point(x,y), r:u*.34}));
+    state.goal = {...point(...level.goal), r:u*.43};
     state.ball.r = Math.max(11, u*.27);
+    levelNumber.textContent = state.levelIndex + 1;
     reset(false);
   }
 
   function reset(hideResult = true) {
     const b = state.board;
-    state.ball.x = b.x + b.w*.08;
-    state.ball.y = b.y + b.h*.10;
+    const level = LEVELS[state.levelIndex];
+    state.ball.x = b.x + b.w*level.start[0];
+    state.ball.y = b.y + b.h*level.start[1];
     state.ball.vx = state.ball.vy = 0;
     state.finished = false;
     state.startedAt = performance.now();
     state.elapsed = 0;
-    statusText.textContent = 'ゴールをめざそう';
+    statusText.textContent = `${state.levelIndex + 1}. ${level.name}`;
     statusIcon.textContent = '◉';
     timer.textContent = '0.0秒';
     if (hideResult) result.hidden = true;
@@ -111,13 +136,29 @@
     statusIcon.textContent = won ? '★' : '↓';
     resultKicker.textContent = won ? 'CLEAR!' : 'OOPS!';
     resultTitle.textContent = won ? 'ゴール！' : '穴に落ちた！';
+    if (won) {
+      const key = String(state.levelIndex);
+      if (!bestTimes[key] || state.elapsed < bestTimes[key]) {
+        bestTimes[key] = state.elapsed;
+        localStorage.setItem('marbleBestTimes', JSON.stringify(bestTimes));
+      }
+      state.unlocked = Math.max(state.unlocked, Math.min(LEVELS.length, state.levelIndex + 2));
+      localStorage.setItem('marbleUnlocked', String(state.unlocked));
+    }
     resultTime.textContent = won ? `${state.elapsed.toFixed(1)}秒でクリア` : 'ゆっくり傾けてみよう';
+    nextButton.hidden = !won || state.levelIndex >= LEVELS.length - 1;
+    if (won && state.levelIndex === LEVELS.length - 1) {
+      resultKicker.textContent = 'ALL CLEAR!';
+      resultTitle.textContent = '完全制覇！';
+      resultTime.textContent = `全${LEVELS.length}ステージ クリア！`;
+    }
+    renderLevelGrid();
     if (navigator.vibrate) navigator.vibrate(won ? [35,40,70] : 80);
     setTimeout(() => { result.hidden = false; }, 350);
   }
 
   function update(dt, now) {
-    if (!state.running || state.finished) return;
+    if (!state.running || state.finished || state.paused) return;
     state.elapsed = (now-state.startedAt)/1000;
     timer.textContent = `${state.elapsed.toFixed(1)}秒`;
     state.tiltX += (state.targetX-state.tiltX)*.16;
@@ -220,6 +261,36 @@
     state.running=true; reset();
   }
 
+  function renderLevelGrid() {
+    levelGrid.replaceChildren();
+    LEVELS.forEach((level, index) => {
+      const button = document.createElement('button');
+      button.className = 'stage-card' + (index === state.levelIndex ? ' current' : '');
+      button.disabled = index >= state.unlocked;
+      const best = bestTimes[String(index)];
+      button.innerHTML = `STAGE ${index + 1}<span>${button.disabled ? '🔒' : best ? best.toFixed(1) + '秒' : level.name}</span>`;
+      button.addEventListener('click', () => {
+        state.levelIndex = index;
+        state.paused = false;
+        levelPanel.hidden = true;
+        buildLevel();
+      });
+      levelGrid.append(button);
+    });
+  }
+
+  function openLevelPanel() {
+    state.paused = true;
+    renderLevelGrid();
+    levelPanel.hidden = false;
+  }
+
+  function closeLevelPanel() {
+    levelPanel.hidden = true;
+    state.paused = false;
+    reset();
+  }
+
   const dirs={up:[0,-.7],down:[0,.7],left:[-.7,0],right:[.7,0],stop:[0,0]};
   touchPad.querySelectorAll('button').forEach(btn=>{
     const set=()=>{[state.targetX,state.targetY]=dirs[btn.dataset.dir];};
@@ -229,7 +300,14 @@
   startButton.addEventListener('click',start);
   document.querySelector('#resetButton').addEventListener('click',()=>reset());
   document.querySelector('#againButton').addEventListener('click',()=>reset());
+  nextButton.addEventListener('click',()=>{
+    if (state.levelIndex < LEVELS.length - 1) state.levelIndex += 1;
+    buildLevel();
+  });
+  levelButton.addEventListener('click',openLevelPanel);
+  closeLevels.addEventListener('click',closeLevelPanel);
   window.addEventListener('resize',resize);
   window.addEventListener('orientationchange',()=>setTimeout(resize,150));
+  renderLevelGrid();
   resize();requestAnimationFrame(frame);
 })();
