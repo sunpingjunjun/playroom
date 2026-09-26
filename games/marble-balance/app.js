@@ -229,11 +229,11 @@
       return;
     }
     const angle=(screen.orientation && screen.orientation.angle) || window.orientation || 0;
-    const deadzone = value => Math.abs(value) < .7 ? 0 : value - Math.sign(value) * .7;
-    // About 12 degrees now reaches full acceleration; a 1–2 degree tilt is
-    // enough to start the marble moving from a flat position.
-    let x=deadzone(event.gamma-state.centerGamma)/12;
-    let y=deadzone(event.beta-state.centerBeta)/12;
+    const deadzone = value => Math.abs(value) < .3 ? 0 : value - Math.sign(value) * .3;
+    // Keep the device nearly level: a tilt of roughly half a degree starts
+    // the marble, and about six degrees reaches full acceleration.
+    let x=deadzone(event.gamma-state.centerGamma)/6;
+    let y=deadzone(event.beta-state.centerBeta)/6;
     if (angle===90) [x,y]=[y,-x];
     else if (angle===-90 || angle===270) [x,y]=[-y,x];
     else if (angle===180) {x=-x;y=-y;}
@@ -301,6 +301,7 @@
   document.querySelector('#resetButton').addEventListener('click',()=>reset());
   document.querySelector('#againButton').addEventListener('click',()=>reset());
   nextButton.addEventListener('click',()=>{
+    result.hidden = true;
     if (state.levelIndex < LEVELS.length - 1) state.levelIndex += 1;
     buildLevel();
   });
